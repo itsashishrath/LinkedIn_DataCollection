@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 import time
+import pandas as pd
 
 # Path to Brave browser executable
 brave_path = "C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe"  # Update the path if necessary
@@ -72,34 +73,47 @@ def _login_with_cookie(driver, cookie):
 
 login(driver=driver, email='smartboyrathore@gmail.com', password='Ashish@123')
 
-# Function to search for students
-def search_students(institution):
-    search_url = f"https://www.linkedin.com/search/results/people/?keywords=student%20at%20{institution}&origin=GLOBAL_SEARCH_HEADER"
-    driver.get(search_url)
-    time.sleep(5)  # Wait for the search results to load
 
 from selenium.webdriver.common.by import By
 
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException
+
 def search_students(institution):
     search_url = f"https://www.linkedin.com/search/results/people/?keywords=student%20at%20{institution}&origin=GLOBAL_SEARCH_HEADER"
     driver.get(search_url)
     time.sleep(5)  # Wait for the search results to load
 
-    # Find all the profile links on the search results page
     profile_links = []
-    profiles = driver.find_elements(By.CLASS_NAME, "reusable-search__result-container")
+    names = []
 
+    # Find all the profile links on the current search results page
+    profiles = driver.find_elements(By.CLASS_NAME, "reusable-search__result-container")
     for profile in profiles:
         link_element = profile.find_element(By.CSS_SELECTOR, 'a.app-aware-link')
         link = link_element.get_attribute('href')
         profile_links.append(link)
 
-    return profile_links
+        try:
+            # Extract the name from the specified span element
+            name_element = profile.find_element(By.CSS_SELECTOR, 'span[dir="ltr"] > span[aria-hidden="true"]')
+            name = name_element.text
+        except NoSuchElementException:
+            name = "Name not found"
+        names.append(name)
+
+    return profile_links, names
 
 
-profiles = search_students('Student at ACROPOLIS INSTITUTE OF TECHNOLOGY AND RESEARCH')
+profiles , names = search_students('Student at ACROPOLIS INSTITUTE OF TECHNOLOGY AND RESEARCH')
 
+# Save the profiles and names to an Excel file
+df = pd.DataFrame({
+    "LinkedIn Profile URL": profiles,
+    "Names": names
+})
+
+df.to_excel("Test.xlsx", index=False)
 
 for profile in profiles:
-    print("Narendra Modi")
     print(profile)
